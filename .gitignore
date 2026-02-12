@@ -1,6 +1,15 @@
 __pycache__/
 *.pdf
-node_modules/
+msal-cache.json
+*.pdf
+node_modules
 .env
 .DS_Store
-*.log
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
