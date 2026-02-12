@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Page Finder (Graph API)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+        h1 { color: #333; }
+        .card { border: 1px solid #ddd; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #0070f3; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #0051a2; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #results { margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; display: none; }
+        .error { color: #d32f2f; background: #ffebee; padding: 0.5rem; border-radius: 4px; margin-top: 1rem; display: none; }
+        .loading { display: none; color: #666; font-style: italic; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>DOCX Page Finder (Graph API)</h1>
+    <div class="card">
+        <form id="searchForm">
+            <div class="form-group">
+                <label for="file">Select DOCX File</label>
+                <input type="file" id="file" name="file" accept=".docx" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="searchText">Search Text</label>
+                <input type="text" id="searchText" name="search_text" placeholder="e.g. Agreement, Confidential" required>
+            </div>
+
+            <button type="submit" id="submitBtn">Find Page Numbers</button>
+        </form>
+
+        <div id="loading" class="loading">Processing... Uploading to OneDrive, Converting, and Searching...</div>
+        <div id="error" class="error"></div>
+        
+        <div id="results">
+            <h3>Results</h3>
+            <p><strong>Occurrences found:</strong> <span id="count"></span></p>
+            <p><strong>Page Numbers:</strong> <span id="pages"></span></p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('searchForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const resultsDiv = document.getElementById('results');
+        const countSpan = document.getElementById('count');
+        const pagesSpan = document.getElementById('pages');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            errorDiv.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Check server logs.');
+                }
+
+                countSpan.textContent = data.count;
+                pagesSpan.textContent = data.pages.join(', ') || 'None';
+                resultsDiv.style.display = 'block';
+
+            } catch (err) {
+                errorDiv.textContent = `Error: ${err.message}`;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
